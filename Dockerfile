@@ -12,6 +12,7 @@ WORKDIR /opt/wyoming_tts_vosk
 
 COPY requirements.txt ./requirements.txt
 RUN python -m pip install --upgrade pip \
+    && python -m pip install torch --index-url https://download.pytorch.org/whl/cpu \
     && python -m pip install -r requirements.txt
 
 COPY . .
