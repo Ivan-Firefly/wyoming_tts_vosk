@@ -1,6 +1,6 @@
 services:
   wyoming-tts-vosk:
-    image: firefly27/wyoming-tts-vosk:latest
+    image: firefly27/wyoming_tts_vosk
     container_name: wyoming-tts-vosk
     restart: unless-stopped
     ports:
