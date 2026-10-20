@@ -1,0 +1,47 @@
+services:
+  wyoming-tts-vosk:
+    image: firefly27/wyoming-tts-vosk:latest
+    container_name: wyoming-tts-vosk
+    restart: unless-stopped
+    ports:
+      - "10205:10205"
+    environment:
+      MODEL_PATH: /models/vosk-model-tts-ru-0.7-multi
+      SPEAKER_ID: "1"
+      SPEECH_RATE: "1.0"
+      MIN_CHARACTERS: "20"
+      MAX_CHARACTERS: "200"
+      DISABLE_STREAMING: "0"
+      DEBUG: "0"
+    volumes:
+      - ./models:/models:ro
+    command:
+      - /bin/sh
+      - -c
+      - |
+        set -eu
+        case "$$MODEL_PATH" in
+          /models/*) ;;
+          *) echo "ERROR: MODEL_PATH must point to a directory under /models" >&2; exit 2 ;;
+        esac
+        for file in model.onnx config.json dictionary; do
+          if [ ! -f "$$MODEL_PATH/$$file" ]; then
+            echo "ERROR: Missing $$MODEL_PATH/$$file. Extract the complete TTS model into ./models first." >&2
+            exit 2
+          fi
+        done
+        set -- \
+          --vosk-model-path "$$MODEL_PATH" \
+          --uri tcp://0.0.0.0:10205 \
+          --provider CPUExecutionProvider \
+          --default-speaker-id "$$SPEAKER_ID" \
+          --speech-rate "$$SPEECH_RATE" \
+          --min-characters "$$MIN_CHARACTERS" \
+          --max-characters "$$MAX_CHARACTERS"
+        if [ "$$DISABLE_STREAMING" = "1" ]; then
+          set -- "$$@" --disable-streaming
+        fi
+        if [ "$$DEBUG" = "1" ]; then
+          set -- "$$@" --debug
+        fi
+        exec python -m wyoming_tts_vosk "$$@"
